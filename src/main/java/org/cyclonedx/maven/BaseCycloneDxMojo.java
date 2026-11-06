@@ -248,6 +248,23 @@ public abstract class BaseCycloneDxMojo extends AbstractMojo {
     @Parameter
     private ExternalReference[] externalReferences;
 
+    /**
+     * Regular expressions for external references to leave out: a reference whose <code>url</code> matches one
+     * of them (<code>find</code>, not a full match) is removed from <code>$.metadata.component</code> and from
+     * every component. The references are taken from the POMs (see
+     * <a href="external-references.html">External References</a>), and a POM can point somewhere that is not
+     * meant for the reader of the SBOM, such as a private repository:
+     * <pre>
+     * &lt;excludeExternalReferenceUrls&gt;
+     *   &lt;excludeExternalReferenceUrl&gt;github\.com/my-org/&lt;/excludeExternalReferenceUrl&gt;
+     * &lt;/excludeExternalReferenceUrls&gt;
+     * </pre>
+     *
+     * @since 2.9.3-iot.1
+     */
+    @Parameter
+    private String[] excludeExternalReferenceUrls;
+
     @Inject
     private MavenProjectHelper mavenProjectHelper;
 
@@ -403,6 +420,12 @@ public abstract class BaseCycloneDxMojo extends AbstractMojo {
                     bom.setCompositions(Collections.singletonList(composition));
                 }
             }*/
+
+            final ExternalReferenceFilter referenceFilter = new ExternalReferenceFilter(excludeExternalReferenceUrls);
+            if (!referenceFilter.isEmpty()) {
+                final int left = referenceFilter.apply(bom);
+                getLog().info(String.format("Left out %d external reference(s) matching excludeExternalReferenceUrls", left));
+            }
 
             if (schemaVersion().getVersion() >= 1.5) {
                 LifecycleChoice build = new LifecycleChoice();

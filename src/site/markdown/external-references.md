@@ -53,3 +53,25 @@ See valid [CycloneDX external reference types][external-reference-type].
 [metadata-component]: https://cyclonedx.org/docs/1.6/json/#metadata_component
 [components]: https://cyclonedx.org/docs/1.6/json/#components
 [external-reference-type]: https://cyclonedx.org/docs/1.6/json/#metadata_component_externalReferences_items_type
+
+## Leaving External References out
+
+The references above are taken from the POMs, and a POM can point somewhere that is not meant for the reader
+of the SBOM: a private repository, an internal issue tracker. `excludeExternalReferenceUrls` takes regular
+expressions; a reference whose `url` matches one of them (`find`, not a full match) is removed from
+`metadata.component` and from every component:
+
+```
+<plugin>
+  <groupId>org.cyclonedx</groupId>
+  <artifactId>cyclonedx-maven-plugin</artifactId>
+  <configuration>
+    <excludeExternalReferenceUrls>
+      <excludeExternalReferenceUrl>github\.com/my-org/</excludeExternalReferenceUrl>
+    </excludeExternalReferenceUrls>
+  </configuration>
+</plugin>
+```
+
+A component that is left with no external reference has none. The option does not change what the POMs say, only
+what ends up in the SBOM.
